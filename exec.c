@@ -4,94 +4,366 @@
 #include "exec.h"
 
 
-static bool illop_fonc(Machine pmach, Instruction instr)
+//! Récupère l'adresse d'une instruction en mode absolu/indexé
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ * \param instr l'instruction à exécuter
+ * \return l'adresse absolu en mode absolu, l'adresse indexée sinon
+ */
+unsigned address(Machine *pmach, Instruction instr) 
+{
+	if (instr.instr_generic._immediate) {
+		return pmach->_registers[instr.instr_indexed._rindex]
+			+ instr.instr_indexed._offset;
+	}
+	return instr.instr_absolute._address;
+}
+
+//! Vérifie s'il doit faire un jump ou non
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ * \param instr l'instruction à exécuter
+ * \return vrai s'il doit faire un jump, faux s'il ne doit pas et rien s'il y a une erreur
+ */
+bool jump_or_not(Machine *pmach, Instruction instr)
+{
+	if ((instr.instr_generic._regcond != NC && pmach->_cc == CC_U) 
+		|| (instr.instr_generic._regcond > LAST_CC)) {
+		error(ERR_CONDITION, pmach->_pc - 1);
+	}
+
+	switch (instr.instr_generic._regcond)
+	{
+		case NC:
+			return true;
+		case EQ:
+			return pmach->_cc == CC_Z;
+		case NE:
+			return pmach->_cc != CC_Z;
+		case GT:
+			return pmach->_cc == CC_P;
+		case GE:
+			return pmach->_cc == CC_P || pmach->_cc == CC_Z;
+		case LT:
+			return pmach->_cc == CC_N;
+		case LE:
+			return pmach->_cc == CC_N || pmach->_cc == CC_Z;
+		default:
+			error(ERR_CONDITION, pmach->_pc - 1);
+	}
+}
+
+//! Effectue un ILLOP sur la machine
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ * \param instr l'instruction à exécuter
+ * \return ne retourne rien car part en erreur
+ */
+bool illop(Machine *pmach, Instruction instr)
 {
 	error(ERR_ILLEGAL, pmach->_pc - 1);
 }
 
-static bool nop_fonc(Machine pmach, Instruction instr)
+//!	Effectue un NOP sur la machine
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ * \param instr l'instruction à exécuter
+ * \return vrai
+ */
+bool nop(Machine *pmach, Instruction instr)
 {
 	return true;
 }
 
-static bool load_fonc(Machine pmach, Instruction instr)
+//!	Effectue un LOAD sur la machine
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ * \param instr l'instruction à exécuter
+ * \return vrai s'il n'y a pas d'erreur
+ */
+bool load(Machine *pmach, Instruction instr)
 {
-	
+	unsigned rc = instr.instr_generic._regcond;
+
+	if (instr.instr_generic._immediate) {
+		pmach->_registers[rc] = instr.instr_immediate._value;
+	} 
+	else {
+		unsigned addr = address(pmach, instr);
+
+		if (addr >= pmach->_datasize) {
+			error(ERR_SEGDATA, pmach->_pc -1);
+		}
+
+		pmach->_registers[rc] = pmach->_data[addr];
+	}
+
+	if (pmach->_registers[rc] < 0) {
+		pmach->_cc = CC_N;
+	}
+	else if (pmach->_registers[rc] == 0) {
+		pmach->_cc = CC_Z;
+	}
+	else {
+		pmach->_cc = CC_P;
+	}
+
+	return true;
 }
 
-static bool store_fonc(Machine pmach, Instruction instr)
+//!	Effectue un STORE sur la machine
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ * \param instr l'instruction à exécuter
+ * \return brai s'il n'y a pas d'erreur
+ */
+bool store(Machine *pmach, Instruction instr)
 {
-	
+	if (instr.instr_generic._immediate) {
+		error(ERR_IMMEDIATE, pmach->_pc - 1);
+	}
+
+	unsigned addr = address(pmach, instr);
+
+	if (addr >= pmach->_datasize) {
+		error(ERR_SEGDATA, pmach->_pc - 1);
+	}
+
+	pmach->_data[addr] = pmach->_registers[instr.instr_generic._regcond];
+
+	return true;
 }
 
-static bool add_fonc(Machine pmach, Instruction instr)
+//!	Effectue un ADD sur la machine
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ * \param instr l'instruction à exécuter
+ * \return vrai s'il n'y a pas d'erreur
+ */
+bool add(Machine *pmach, Instruction instr)
 {
-	
+	unsigned rc = instr.instr_generic._regcond;
+
+	if (instr.instr_generic._immediate) {
+		pmach->_registers[rc] += instr.instr_immediate._value;
+	} 
+	else {
+		unsigned addr = address(pmach, instr);
+
+		if (addr >= pmach->_datasize) {
+			error(ERR_SEGDATA, pmach->_pc - 1);
+		}
+
+		pmach->_registers[rc] += pmach->_data[addr];
+	}
+
+	if (pmach->_registers[rc] < 0) {
+		pmach->_cc = CC_N;
+	}
+	else if (pmach->_registers[rc] == 0) {
+		pmach->_cc = CC_Z;
+	}
+	else {
+		pmach->_cc = CC_P;
+	}
+
+	return true;
 }
 
-static bool sub_fonc(Machine pmach, Instruction instr)
+//!	Effectue un SUB sur la machine
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ * \param instr l'instruction à exécuter
+ * \return vrai s'il n'y a pas d'erreur
+ */
+bool sub(Machine *pmach, Instruction instr)
 {
-	
+	unsigned rc = instr.instr_generic._regcond;
+
+	if (instr.instr_generic._immediate) {
+		pmach->_registers[rc] -= instr.instr_immediate._value;
+	} 
+	else {
+		unsigned addr = address(pmach, instr);
+
+		if (addr >= pmach->_datasize) {
+			error(ERR_SEGDATA, pmach->_pc - 1);
+		}
+
+		pmach->_registers[rc] -= pmach->_data[addr];
+	}
+
+	if (pmach->_registers[rc] < 0) {
+		pmach->_cc = CC_N;
+	}
+	else if (pmach->_registers[rc] == 0) {
+		pmach->_cc = CC_Z;
+	}
+	else {
+		pmach->_cc = CC_P;
+	}
+
+	return true;
 }
 
-static bool branch_fonc(Machine pmach, Instruction instr)
+//!	Effectue un BRANCH sur la machine
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ * \param instr l'instruction à exécuter
+ * \return vrai s'il n'y a pas d'erreur
+ */
+bool branch(Machine *pmach, Instruction instr)
 {
-	
+	if (instr.instr_generic._immediate) {
+		error(ERR_IMMEDIATE, pmach->_pc - 1);
+	}
+
+	if (jump_or_not(pmach, instr)) {
+		pmach->_pc = address(pmach, instr);
+	}
+
+	return true;
 }
 
-static bool call_fonc(Machine pmach, Instruction instr)
+//!	Effectue un CALL sur la machine
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ * \param instr l'instruction à exécuter
+ * \return vrai s'il n'y a pas d'erreur
+ */
+bool call(Machine *pmach, Instruction instr)
 {
-	
+	if (instr.instr_generic._immediate) {
+		error(ERR_IMMEDIATE, pmach->_pc - 1);
+	}
+
+	if (jump_or_not(pmach, instr)) {
+		if (pmach->_sp < 0 || pmach->_sp >= pmach->_datasize) {
+			error(ERR_SEGSTACK, pmach->_pc - 1);
+		}
+
+		pmach->_data[pmach->_sp] = pmach->_pc;
+		pmach->_pc = address(pmach, instr);
+		pmach->_sp--;
+	}
+
+	return true;
 }
 
-static bool ret_fonc(Machine pmach, Instruction instr)
+//!	Effectue un RET sur la machine
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ * \param instr l'instruction à exécuter
+ * \return vrai s'il n'y a pas d'erreur
+ */
+bool ret(Machine *pmach, Instruction instr)
 {
-	
+	pmach->_sp++;
+	if (pmach->_sp < 0 || pmach->_sp >= pmach->_datasize) {
+		error(ERR_SEGSTACK, pmach->_pc - 1);
+	}
+
+
+	pmach->_pc = pmach->_data[pmach->_sp];
+	return true;
 }
 
-static bool push_fonc(Machine pmach, Instruction instr)
+//!	Effectue un PUSH sur la machine
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ * \param instr l'instruction à exécuter
+ * \return vrai s'il n'y a pas d'erreur
+ */
+bool push(Machine *pmach, Instruction instr)
 {
-	
+	if (pmach->_sp < 0 || pmach->_sp >= pmach->_datasize) {
+		error(ERR_SEGSTACK, pmach->_pc - 1);
+	}
+
+	if (instr.instr_generic._immediate) {
+		pmach->_data[pmach->_sp] = instr.instr_immediate._value;
+	}
+	else {
+		unsigned addr = address(pmach, instr);
+		if (addr >= pmach->_datasize) {
+			error(ERR_SEGDATA, pmach->_pc - 1);
+		}
+
+		pmach->_data[pmach->_sp] = pmach->_data[addr];
+	}
+
+	pmach->_sp--;
+	return true;
 }
 
-static bool pop_fonc(Machine pmach, Instruction instr)
+//!	Effectue un POP sur la machine
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ * \param instr l'instruction à exécuter
+ * \return vrai s'il n'y a pas d'erreur
+ */
+bool pop(Machine *pmach, Instruction instr)
 {
-	
+	pmach->_sp++;
+	if (instr.instr_generic._immediate) {
+		error(ERR_IMMEDIATE, pmach->pc - 1);
+	}
+	if (pmach->_sp < 0 || pmach->_sp >= pmach->_datasize) {
+		error(ERR_SEGSTACK, pmach->_pc - 1);
+	}
+
+	unsigned addr = address(pmach, instr);
+
+	if (addr >= pmach->_datasize) {
+		error(ERR_SEGDATA, pmach->_pc - 1);
+	}
+
+	pmach->_data[addr] = pmach->_data[pmach->_sp];
+
+	return true;
 }
 
-static bool halt_fonc(Machine pmach, Instruction instr)
+//!	Effectue un HALT sur la machine
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ * \param instr l'instruction à exécuter
+ * \return faux
+ */
+bool halt(Machine *pmach, Instruction instr)
 {
-	
+	warning(WARN_HALT, pmach->_pc - 1);
+	return false;
 }
+
 
 bool decode_execute(Machine *pmach, Instruction instr)
 {
 	switch(instr.instr_generic._cop)
 	{
 		case ILLOP:
-			return illop_fonc(pmach, instr);
+			return illop(pmach, instr);
 		case NOP:
-			return nop_fonc(pmach, instr);
+			return nop(pmach, instr);
 		case LOAD:
-			return load_fonc(pmach, instr);
+			return load(pmach, instr);
 		case STORE:
-			return store_fonc(pmach, instr);
+			return store(pmach, instr);
 		case ADD:
-			return add_fonc(pmach, instr);
+			return add(pmach, instr);
 		case SUB:
-			return sub_fonc(pmach, instr);
+			return sub(pmach, instr);
 		case BRANCH:
-			return branch_fonc(pmach, instr);
+			return branch(pmach, instr);
 		case CALL:
-			return call_fonc(pmach, instr);
+			return call(pmach, instr);
 		case RET:
-			return ret_fonc(pmach, instr);
+			return ret(pmach, instr);
 		case PUSH:
-			return push_fonc(pmach, instr);
+			return push(pmach, instr);
 		case POP:
-			return pop_fonc(pmach, instr);
+			return pop(pmach, instr);
 		case HALT:
-			return halt_fonc(pmach, instr);
+			return halt(pmach, instr);
 		default:
 			error(ERR_UNKNOWN, pmach->_pc - 1);
 	}
