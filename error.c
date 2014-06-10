@@ -41,11 +41,3 @@ void error(Error err, unsigned addr)
 	}
 
 }
-
-int main()
-{
-	Warning warn = WARN_HALT;
-	Error err = ERR_NOERROR;
-	warning(warn,1);
-	error(err,1);
-}
