@@ -23,19 +23,38 @@ void load_program(Machine *pmach,
 	pmach->_registers[NREGISTERS-1] = datasize - 1;
 }
 
-//reste plus qu'à le coder !
 void read_program(Machine *mach, const char *programfile)
 {
-	//kékonfé ? ^o^
-	
 	//les entiers sont sur 32 bits .
+	//kékonfé ? ^o^
 	//Ouverture du fichier
-	//lecture des 3 premiers entiers de ce fichier : 1) _textsize   2) _datasize    3) _dataend
-	//lecture des _textsize entiers suivants (segment d'instructions _text)
-	//lecture des _datasize entiers suivants (segment de donnees _data)
-	//initialisation de la machine à l'aide de load_program .
-	//fermeture du fichier 
+	int fd = open(programfile,O_RDONLY);
+	if(fd != -1)
+	{
+		//1) _textsize
+		unsigned int textsize;
+		read(fd,&textsize,32);
 
+		//2) _datasize
+		unsigned int datasize;
+		read(fd,&datasize,32);
+
+		//3) _dataend
+		unsigned int dataend;
+		read(fd,&dataend,32);
+
+		for(unsigned int i = 0;i<textsize;i++)
+		{
+			//lecture des instructions
+		}
+		for(unsigned int i = 0;i<datasize;i++)
+		{
+			//lecture des donnees
+		}
+
+		//initialisation de la machine .
+		close(fd);//fermeture du fichier .
+	}
 }
 
 
@@ -49,24 +68,26 @@ void dump_memory(Machine *pmach)
 void print_program(Machine *pmach)
 {
 		printf("*** PROGRAM (size: %d) ***\n",pmach->_textsize);
-		for( unsigned int i = 0; pmach->_text + i < pmach->_textsize ; i++ )
+		for( unsigned int i = 0; i < pmach->_textsize ; i++ )
 		{
 			Instruction *instruction = pmach->_text + i;
-			print_instruction(*instruction,i);//PROBLEME
-			//printf("\n");
+			printf("Ox%04X: Ox%08X	",i,instruction->_raw);
+			print_instruction(*instruction,i);
+			printf("\n");
 		}
-
+		printf("\n");
 }
 
 //kékireste :tests
 void print_data(Machine *pmach)
 {
-printf("*** DATA (size: %d, end = Ox%X (%d)) ***\n",pmach->_datasize,pmach->_dataend,pmach->_dataend);
-	for(unsigned int i = 0; i < pmach->_dataend;i++)
+printf("*** DATA (size: %d, end = Ox%08X (%d)) ***\n",pmach->_datasize,pmach->_dataend,pmach->_dataend);
+	for(unsigned int i = 0; i < pmach->_datasize;i++)
 	{
 		Word *donnee = pmach->_data + i;
-		printf("Ox%X: Ox%X %d",i,*donnee,*donnee);
+		printf("Ox%04X: Ox%08X %d\n",i,*donnee,*donnee);
 	}
+	printf("\n");
 }
 
 //kékireste : tests
@@ -92,14 +113,11 @@ void print_cpu(Machine *pmach)
 		break;
 	}
 	printf("*** CPU ***\n");
-	printf("PC: Ox%X   CC: %c",pmach->_pc,type_cc);
+	printf("PC: Ox%08X   CC: %c\n",pmach->_pc,type_cc);
 	for(int i = 0;i < NREGISTERS;i++)
 	{
 		Word registre = pmach->_registers[i];
-		if(i<10)
-			printf("R0%d: Ox%X %d",i,registre,registre);
-		else
-			printf("R%d: Ox%X %d",i,registre,registre);
+		printf("R%02d: Ox%08X %d\n",i,registre,registre);
 	}
 
 }
