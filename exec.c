@@ -4,7 +4,7 @@
 #include "exec.h"
 
 
-//!	
+//! Effectue un ILLOP sur la machine
 /*!
  * \param pmach la machine/programme en cours d'exécution
  * \param instr l'instruction à exécuter
@@ -15,7 +15,7 @@ static bool illop_fonc(Machine pmach, Instruction instr)
 	error(ERR_ILLEGAL, pmach->_pc - 1);
 }
 
-//!	
+//!	Effectue un ILLOP sur la machine
 /*!
  * \param pmach la machine/programme en cours d'exécution
  * \param instr l'instruction à exécuter
@@ -26,7 +26,7 @@ static bool nop_fonc(Machine pmach, Instruction instr)
 	return true;
 }
 
-//!	
+//!	Effectue un ILLOP sur la machine
 /*!
  * \param pmach la machine/programme en cours d'exécution
  * \param instr l'instruction à exécuter
@@ -37,7 +37,7 @@ static bool load_fonc(Machine pmach, Instruction instr)
 	
 }
 
-//!	
+//!	Effectue un ILLOP sur la machine
 /*!
  * \param pmach la machine/programme en cours d'exécution
  * \param instr l'instruction à exécuter
@@ -48,7 +48,7 @@ static bool store_fonc(Machine pmach, Instruction instr)
 	
 }
 
-//!	
+//!	Effectue un ILLOP sur la machine
 /*!
  * \param pmach la machine/programme en cours d'exécution
  * \param instr l'instruction à exécuter
@@ -59,7 +59,7 @@ static bool add_fonc(Machine pmach, Instruction instr)
 	
 }
 
-//!	
+//!	Effectue un ILLOP sur la machine
 /*!
  * \param pmach la machine/programme en cours d'exécution
  * \param instr l'instruction à exécuter
@@ -70,7 +70,7 @@ static bool sub_fonc(Machine pmach, Instruction instr)
 	
 }
 
-//!	
+//!	Effectue un ILLOP sur la machine
 /*!
  * \param pmach la machine/programme en cours d'exécution
  * \param instr l'instruction à exécuter
@@ -82,7 +82,7 @@ static bool branch_fonc(Machine pmach, Instruction instr)
 }
 
 
-//!	
+//!	Effectue un ILLOP sur la machine
 /*!
  * \param pmach la machine/programme en cours d'exécution
  * \param instr l'instruction à exécuter
@@ -93,7 +93,7 @@ static bool call_fonc(Machine pmach, Instruction instr)
 	
 }
 
-//!	
+//!	Effectue un ILLOP sur la machine
 /*!
  * \param pmach la machine/programme en cours d'exécution
  * \param instr l'instruction à exécuter
@@ -104,7 +104,7 @@ static bool ret_fonc(Machine pmach, Instruction instr)
 	
 }
 
-//!	
+//!	Effectue un ILLOP sur la machine
 /*!
  * \param pmach la machine/programme en cours d'exécution
  * \param instr l'instruction à exécuter
@@ -115,7 +115,7 @@ static bool push_fonc(Machine pmach, Instruction instr)
 	
 }
 
-//!	
+//!	Effectue un ILLOP sur la machine
 /*!
  * \param pmach la machine/programme en cours d'exécution
  * \param instr l'instruction à exécuter
@@ -126,7 +126,7 @@ static bool pop_fonc(Machine pmach, Instruction instr)
 	
 }
 
-//!	
+//!	Effectue un ILLOP sur la machine
 /*!
  * \param pmach la machine/programme en cours d'exécution
  * \param instr l'instruction à exécuter
@@ -153,44 +153,31 @@ bool decode_execute(Machine *pmach, Instruction instr)
 	switch(instr.instr_generic._cop)
 	{
 		case ILLOP:
-			illop_fonc(pmach, instr);
-			break;
+			return illop_fonc(pmach, instr);
 		case NOP:
-			nop_fonc(pmach, instr);
-			break;
+			return nop_fonc(pmach, instr);
 		case LOAD:
-			load_fonc(pmach, instr);
-			break;
+			return load_fonc(pmach, instr);
 		case STORE:
-			store_fonc(pmach, instr);
-			break;
+			return store_fonc(pmach, instr);
 		case ADD:
-			add_fonc(pmach, instr);
-			break;
+			return add_fonc(pmach, instr);
 		case SUB:
-			sub_fonc(pmach, instr);
-			break;
+			return sub_fonc(pmach, instr);
 		case BRANCH:
-			branch_fonc(pmach, instr);
-			break;
+			return branch_fonc(pmach, instr);
 		case CALL:
-			call_fonc(pmach, instr);
-			break;
+			return call_fonc(pmach, instr);
 		case RET:
-			ret_fonc(pmach, instr);
-			break;
+			return ret_fonc(pmach, instr);
 		case PUSH:
-			push_fonc(pmach, instr);
-			break;
+			return push_fonc(pmach, instr);
 		case POP:
-			pop_fonc(pmach, instr);
-			break;
+			return pop_fonc(pmach, instr);
 		case HALT:
-			halt_fonc(pmach, instr);
-			break;
+			return halt_fonc(pmach, instr);
 		default:
 			error(ERR_UNKNOWN, pmach->_pc - 1);
-			break;
 	}
 }
 
