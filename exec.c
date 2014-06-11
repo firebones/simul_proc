@@ -13,6 +13,10 @@
 unsigned address(Machine *pmach, Instruction instr) 
 {
 	if (instr.instr_generic._immediate) {
+		return instr.instr_immediate._value;
+	}
+
+	else if (instr.instr_generic._indexed) {
 		return pmach->_registers[instr.instr_indexed._rindex]
 			+ instr.instr_indexed._offset;
 	}
@@ -27,8 +31,7 @@ unsigned address(Machine *pmach, Instruction instr)
  */
 bool jump_or_not(Machine *pmach, Instruction instr)
 {
-	if ((instr.instr_generic._regcond != NC && pmach->_cc == CC_U) 
-		|| (instr.instr_generic._regcond > LAST_CC)) {
+	if (instr.instr_generic._regcond > LAST_CONDITION) {
 		error(ERR_CONDITION, pmach->_pc - 1);
 	}
 
@@ -306,7 +309,7 @@ bool pop(Machine *pmach, Instruction instr)
 {
 	pmach->_sp++;
 	if (instr.instr_generic._immediate) {
-		error(ERR_IMMEDIATE, pmach->pc - 1);
+		error(ERR_IMMEDIATE, pmach->_pc - 1);
 	}
 	if (pmach->_sp < 0 || pmach->_sp >= pmach->_datasize) {
 		error(ERR_SEGSTACK, pmach->_pc - 1);
