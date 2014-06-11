@@ -21,31 +21,21 @@ void error(Error err, unsigned addr)
     		printf("Illegal instruction at address 0x%x\n",addr);	
     		exit(1);
     	case ERR_CONDITION:
-    		printf("Illegal condition reached at address 0x%x\n",addr);
+    		printf("Illegal condition at address 0x%x\n",addr);
     		exit(1);
     	case ERR_IMMEDIATE:	
-    		printf("Forbidden Immediate value reached at address 0x%x\n",addr); 
+    		printf("Immediate value forbidden at address 0x%x\n",addr); 
     		exit(1);
     	case ERR_SEGTEXT:
-    		printf("Violation size of text segment reached at address 0x%x\n",addr);
+    		printf("Segmentation fault in text at address 0x%x\n",addr);
     		exit(1);	
     	case ERR_SEGDATA: 
-    		printf("Violation size of data segment reached at address 0x%x\n",addr);	
+    		printf("Segmentation fault in data at address 0x%x\n",addr);	
     		exit(1);
     	case ERR_SEGSTACK: 
-    		printf("Violation size of stack segment at address 0x%x\n",addr);
+    		printf("Segmentation fault in stack at address 0x%x\n",addr);
     		exit(1);
     	case ERR_NOERROR:
-    		printf("NO ERROR");
     		exit(0);
 	}
-
-}
-
-int main()
-{
-	Warning warn = WARN_HALT;
-	Error err = ERR_NOERROR;
-	warning(warn,1);
-	error(err,1);
 }
