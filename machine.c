@@ -2,6 +2,9 @@
 #include "exec.h"//possible?
 #include "debug.h"//possible?
 #include <stdio.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 //PROBLEME: print_program
 
 //kékireste : vérifications, tests .
@@ -23,7 +26,7 @@ void load_program(Machine *pmach,
 	pmach->_registers[NREGISTERS-1] = datasize - 1;
 }
 
-void read_program(Machine *mach, const char *programfile)
+void read_program(Machine *pmach, const char *programfile)
 {
 	//les entiers sont sur 32 bits .
 	//kékonfé ? ^o^
@@ -43,25 +46,53 @@ void read_program(Machine *mach, const char *programfile)
 		unsigned int dataend;
 		read(fd,&dataend,32);
 
+		Instruction text[textsize];
+		Word data[datasize];
+
 		for(unsigned int i = 0;i<textsize;i++)
 		{
-			//lecture des instructions
+			Instruction instruction;
+			read(fd,&instruction,32);
+			text[i] = instruction;
 		}
+
 		for(unsigned int i = 0;i<datasize;i++)
 		{
-			//lecture des donnees
+			Word donnee;
+			read(fd,&donnee,32);
+			data[i] = donnee;
 		}
 
 		//initialisation de la machine .
+		load_program(pmach,textsize,text,datasize,data,dataend);
 		close(fd);//fermeture du fichier .
 	}
 }
 
 
-//kékecé un dump? *epic flemme*
+ 
+
 void dump_memory(Machine *pmach)
 {
-		//kékonfé ? ^o^
+	printf("*** Sauvegarde des programmes et données initiales en format binaire ***\n\n");
+	printf("Instruction text[] = {\n");
+	//boucle pour récupérer les instructions
+	for(unsigned int i = 0; i < pmach->_textsize;i++)
+	{
+		Instruction *instruction = pmach->_text + i;
+		printf("0x%08X, ",instruction->_raw);
+	}
+	printf("\n};\n");
+	printf("unsigned textsize = %d;\n\n",pmach->_textsize);
+	printf("Word data[] = {\n");
+	//boucle pour récupérer les donnees
+	for(unsigned int i = 0; i <pmach->_datasize;i++){
+		Word *donnee = pmach->_data + i;
+		printf("0x%08X, ",*donnee);
+	}
+	printf("};\n");
+	printf("unsigned datasize = %d\n;",pmach->_datasize);
+	printf("unsigned dataend = %d\n;",pmach->_dataend);
 }
 
 //PROBLEME : l'adresse de l'instruction, c'est bien i ?
