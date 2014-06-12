@@ -3,10 +3,10 @@
 
 void warning(Warning warn, unsigned addr)
 {
-	printf("WARNING: ");
+	fprintf(stdout,"WARNING: ");
 	if (warn == WARN_HALT)
 	{
-		printf("HALT reached at address 0x%x\n",addr);
+		fprintf(stdout,"HALT reached at address 0x%x\n",addr);
 	}
 }
 
