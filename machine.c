@@ -5,7 +5,13 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <stdlib.h>
 //PROBLEME: print_program
+
+void die(const char *texte){
+	perror(texte);
+	exit(1);
+}
 
 //kékireste : vérifications, tests .
 void load_program(Machine *pmach,
@@ -28,71 +34,98 @@ void load_program(Machine *pmach,
 
 void read_program(Machine *pmach, const char *programfile)
 {
-	//les entiers sont sur 32 bits .
-	//kékonfé ? ^o^
-	//Ouverture du fichier
-	int fd = open(programfile,O_RDONLY);
-	if(fd != -1)
-	{
-		//1) _textsize
-		unsigned int textsize;
-		read(fd,&textsize,32);
+	
+		FILE *fichier;
+		if((fichier = fopen(programfile,"r"))== NULL)
+			die("./machine.c read_program : erreur à l'ouverture du fichier");
 
+		unsigned int textsize;
+		if(fread(&textsize,sizeof(unsigned int),1,fichier)!= 1)
+			die("./machine.c read_program : erreur à la lecture de textsize");
 		//2) _datasize
 		unsigned int datasize;
-		read(fd,&datasize,32);
+		if(fread(&datasize,sizeof(unsigned int),1,fichier) != 1)
+			die("./machine.c read_program : erreur à la lecture de datasize");
 
 		//3) _dataend
 		unsigned int dataend;
-		read(fd,&dataend,32);
+		if(fread(&dataend,sizeof(unsigned int),1,fichier) != 1)
+			die("./machine.c read_program : erreur à la lecture de dataend");
 
-		Instruction text[textsize];
-		Word data[datasize];
+		Instruction *text = malloc(textsize*sizeof(Instruction));
+		if(fread(text,sizeof(Word),textsize,fichier) != textsize)
+			die("./machine.c read_program : erreur à la lecture des instructions");
 
-		for(unsigned int i = 0;i<textsize;i++)
-		{
-			Instruction instruction;
-			read(fd,&instruction,32);
-			text[i] = instruction;
-		}
-
-		for(unsigned int i = 0;i<datasize;i++)
-		{
-			Word donnee;
-			read(fd,&donnee,32);
-			data[i] = donnee;
-		}
+		Word *data = malloc(datasize*sizeof(Word));
+		if(fread(data,sizeof(Word),datasize,fichier) != datasize)
+			die("./machine.c read_program : erreur à la lecture des données");
 
 		//initialisation de la machine .
 		load_program(pmach,textsize,text,datasize,data,dataend);
-		close(fd);//fermeture du fichier .
-	}
+		
+		if(fclose(fichier)== -1)
+			die("./machine.c read_program : erreur à la fermeture du fichier");
 }
 
 
  
-
+//oubli de paste dans un fichier dump.bin TODO
 void dump_memory(Machine *pmach)
 {
-	printf("*** Sauvegarde des programmes et données initiales en format binaire ***\n\n");
+	FILE *dump;
+	if((dump = fopen("dump.bin","w+"))== NULL)
+		die("./machine.c dump_memory : erreur à l'ouverture du fichier .");
+
+	if(fwrite(&(pmach->_textsize),sizeof(unsigned int ),1,dump)!= 1)
+		die("./machine.c dump_memory : erreur à l'écriture de textsize .");
+
+	if(fwrite(&(pmach->_datasize),sizeof(unsigned int ),1,dump)!= 1)
+		die("./machine.c dump_memory : erreur à l'écriture de datasize .");
+
+	if(fwrite(&(pmach->_dataend),sizeof(unsigned int ),1,dump)!= 1)
+		die("./machine.c dump_memory : erreur à l'écriture de dataend .");
+
+	if(fwrite(&(pmach->_text->_raw),sizeof(Word),pmach->_textsize,dump) != pmach->_textsize)
+		die("./machine.c dump_memory : erreur à l'écriture des instructions .");
+
+	if(fwrite(&(pmach->_data),sizeof(Word),pmach->_datasize,dump) != pmach->_datasize)
+		die("./machine.c dump_memory : erreur à l'écriture des données .");
+
+	if(fclose(dump) == -1)
+		die("./machine.c dump_memory : erreur à la fermeture du fichier binaire .");
+
 	printf("Instruction text[] = {\n");
 	//boucle pour récupérer les instructions
 	for(unsigned int i = 0; i < pmach->_textsize;i++)
 	{
 		Instruction *instruction = pmach->_text + i;
-		printf("0x%08X, ",instruction->_raw);
+		if(i%4 == 0)
+			printf("	0x%08X, ",instruction->_raw);
+		else if(i%4 == 3)
+			printf("0x%08X,\n",instruction->_raw);
+		else
+			printf("0x%08X, ",instruction->_raw);
 	}
+
 	printf("\n};\n");
 	printf("unsigned textsize = %d;\n\n",pmach->_textsize);
 	printf("Word data[] = {\n");
+
 	//boucle pour récupérer les donnees
-	for(unsigned int i = 0; i <pmach->_datasize;i++){
+	for(unsigned int i = 0; i <pmach->_datasize;i++)
+	{
 		Word *donnee = pmach->_data + i;
-		printf("0x%08X, ",*donnee);
+		if(i%4 == 0)
+			printf("	0x%08X, ",*donnee);
+		else if(i%4 == 3)
+			printf("0x%08X,\n",*donnee);
+		else
+			printf("0x%08X, ",*donnee);
 	}
+
 	printf("};\n");
-	printf("unsigned datasize = %d\n;",pmach->_datasize);
-	printf("unsigned dataend = %d\n;",pmach->_dataend);
+	printf("unsigned datasize = %d;\n",pmach->_datasize);
+	printf("unsigned dataend = %d;\n",pmach->_dataend);
 }
 
 //PROBLEME : l'adresse de l'instruction, c'est bien i ?
@@ -116,9 +149,12 @@ printf("*** DATA (size: %d, end = Ox%08X (%d)) ***\n",pmach->_datasize,pmach->_d
 	for(unsigned int i = 0; i < pmach->_datasize;i++)
 	{
 		Word *donnee = pmach->_data + i;
-		printf("Ox%04X: Ox%08X %d\n",i,*donnee,*donnee);
+		if(i%3 == 2)
+			printf("Ox%04X: Ox%08X %d\n",i,*donnee,*donnee);
+		else
+			printf("Ox%04X: Ox%08X %d       ",i,*donnee,*donnee);
 	}
-	printf("\n");
+	printf("\n\n");
 }
 
 //kékireste : tests
@@ -148,35 +184,22 @@ void print_cpu(Machine *pmach)
 	for(int i = 0;i < NREGISTERS;i++)
 	{
 		Word registre = pmach->_registers[i];
-		printf("R%02d: Ox%08X %d\n",i,registre,registre);
+		if(i%3 == 2)
+			printf("R%02d: Ox%08X %d\n",i,registre,registre);
+		else
+			printf("R%02d: Ox%08X %d     ",i,registre,registre);
 	}
-
+	printf("\n\n");
 }
 
-//toupabo : dupplication de code .
 void simul(Machine *pmach, bool debug)
 {
-	if(!debug)//si il n'y a pas de debug prévu
-	{
-		//tant qu'on est pas arrivé à la fin du segment d'instructions, qui est de taille _textsize
-		for( unsigned int i = pmach->_pc ; pmach->_text + i < pmach->_textsize ; i++ )
-		{
-			Instruction *instruction = pmach->_text + pmach->_pc;//instruction courante
-					//décodage puis exécution de l'instruction
-			decode_execute(pmach,*instruction);
-		}
-	}
-	else//mode debug
-	{
-		//tant qu'on est pas arrivé à la fin du segment d'instructions, qui est de taille _textsize
-		for( unsigned int i = pmach->_pc ; pmach->_text + i < pmach->_textsize ; i++ )
-		{
-			if(debug_ask(pmach))
-			{
-				Instruction *instruction = pmach->_text + pmach->_pc;//instruction courante
-				//décodage puis exécution de l'instruction
-				decode_execute(pmach,*instruction);
-			}
-		}
+	int run = 1;
+	while(run == 1){
+		Instruction instruction = pmach->_text[pmach->_pc++];
+		trace("Executing",pmach,instruction,pmach->_pc-1);
+		run = decode_execute(pmach,instruction);
+		if(debug)
+			debug_ask(pmach);
 	}
 }
