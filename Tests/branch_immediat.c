@@ -9,7 +9,7 @@
 Instruction text[] = {
 //   type		 cop	imm	ind	regcond	operand
 //-------------------------------------------------------------
-    {.instr_absolute =   {POP, 	 true, false, 	0, 	0	}},  // 0
+    {.instr_absolute =   {BRANCH, 	 true, false, 	0, 	0	}},  // 0
 };
 
 //! Taille utile du programme
