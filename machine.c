@@ -60,9 +60,8 @@ void read_program(Machine *pmach, const char *programfile)
 		if(fread(data,sizeof(Word),datasize,fichier) != datasize)
 			die("./machine.c read_program : erreur à la lecture des données");
 
-		//! initialisation de la machine .
 		load_program(pmach,textsize,text,datasize,data,dataend);
-		
+
 		if(fclose(fichier)== -1)
 			die("./machine.c read_program : erreur à la fermeture du fichier");
 }
@@ -190,10 +189,7 @@ void simul(Machine *pmach, bool debug)
 	int run = 1;
 	while(run == 1){
 		if(pmach->_pc >= pmach->_textsize)
-		{
-
 			error(ERR_SEGTEXT, pmach->_pc);
-		} 
 		Instruction instruction = pmach->_text[pmach->_pc++];
 		trace("Executing",pmach,instruction,pmach->_pc-1);
 		run = decode_execute(pmach,instruction);
