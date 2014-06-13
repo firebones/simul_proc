@@ -1,1 +1,14 @@
 libsimul.a
+debug.o
+depend.out
+error.o
+instruction.o
+machine.o
+test_simul.o
+exec.o
+prog.o
+output.bin
+dump.bin
+asm
+test_simul
+MakeFile

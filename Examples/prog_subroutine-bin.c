@@ -1,3 +1,4 @@
+#include "machine.h"
 Instruction text[] = {
     0x00002f09, 0x00003f09, 0x0000a007, 0x00002f44, 
     0x00002003, 0x0000000b, 0x00000001, 0x00000001, 
