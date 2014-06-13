@@ -53,6 +53,29 @@ static bool jump_or_not(Machine *pmach, Instruction instr)
 	}
 }
 
+//! Vérifie s'il n'y a pas d'erreur de segmentation des données
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ * \param addr l'adressse de l'instruction
+ */
+ static void test_error_dataseg(Machine *pmach, unsigned addr)
+ {
+ 	if (addr >= pmach->_datasize) {
+		error(ERR_SEGDATA, pmach->_pc -1);
+	}
+ }
+
+ //! Vérifie s'il n'y a pas d'erreur de segmentation de la pile
+/*!
+ * \param pmach la machine/programme en cours d'exécution
+ */
+ static void test_error_datastack(Machine *pmach)
+ {
+ 	if (pmach->_sp < 0 || pmach->_sp >= pmach->_datasize) {
+		error(ERR_SEGSTACK, pmach->_pc - 1);
+	}
+ }
+
 //!	Effectue un LOAD sur la machine
 /*!
  * \param pmach la machine/programme en cours d'exécution
@@ -67,10 +90,7 @@ static bool load(Machine *pmach, Instruction instr)
 	} 
 	else {
 		unsigned addr = address(pmach, instr);
-
-		if (addr >= pmach->_datasize) {
-			error(ERR_SEGDATA, pmach->_pc -1);
-		}
+		test_error_dataseg(pmach, addr);
 		pmach->_registers[rc] = pmach->_data[addr];
 	}
 	if (pmach->_registers[rc] < 0) {
@@ -97,9 +117,7 @@ static bool store(Machine *pmach, Instruction instr)
 		error(ERR_IMMEDIATE, pmach->_pc - 1);
 	}
 	unsigned addr = address(pmach, instr);
-	if (addr >= pmach->_datasize) {
-		error(ERR_SEGDATA, pmach->_pc - 1);
-	}
+	test_error_dataseg(pmach, addr);
 	pmach->_data[addr] = pmach->_registers[instr.instr_generic._regcond];
 	return true;
 }
@@ -119,9 +137,7 @@ static bool add_sub(Machine *pmach, Instruction instr)
 	} 
 	else {
 		unsigned addr = address(pmach, instr);
-		if (addr >= pmach->_datasize) {
-			error(ERR_SEGDATA, pmach->_pc - 1);
-		}
+		test_error_dataseg(pmach, addr);
 		pmach->_registers[rc] += pmach->_data[addr] * sign;
 	}
 	if (pmach->_registers[rc] < 0) {
@@ -165,9 +181,7 @@ static bool call(Machine *pmach, Instruction instr)
 		error(ERR_IMMEDIATE, pmach->_pc - 1);
 	}
 	if (jump_or_not(pmach, instr)) {
-		if (pmach->_sp < 0 || pmach->_sp >= pmach->_datasize) {
-			error(ERR_SEGSTACK, pmach->_pc - 1);
-		}
+		test_error_datastack(pmach);
 		pmach->_data[pmach->_sp] = pmach->_pc;
 		pmach->_pc = address(pmach, instr);
 		pmach->_sp--;
@@ -184,9 +198,7 @@ static bool call(Machine *pmach, Instruction instr)
 static bool ret(Machine *pmach, Instruction instr)
 {
 	pmach->_sp++;
-	if (pmach->_sp < 0 || pmach->_sp >= pmach->_datasize) {
-		error(ERR_SEGSTACK, pmach->_pc - 1);
-	}
+	test_error_datastack(pmach);
 	pmach->_pc = pmach->_data[pmach->_sp];
 	return true;
 }
@@ -199,17 +211,13 @@ static bool ret(Machine *pmach, Instruction instr)
  */
 static bool push(Machine *pmach, Instruction instr)
 {
-	if (pmach->_sp < 0 || pmach->_sp >= pmach->_datasize) {
-		error(ERR_SEGSTACK, pmach->_pc - 1);
-	}
+	test_error_datastack(pmach);
 	if (instr.instr_generic._immediate) {
 		pmach->_data[pmach->_sp] = instr.instr_immediate._value;
 	}
 	else {
 		unsigned addr = address(pmach, instr);
-		if (addr >= pmach->_datasize) {
-			error(ERR_SEGDATA, pmach->_pc - 1);
-		}
+		test_error_dataseg(pmach, addr);
 		pmach->_data[pmach->_sp] = pmach->_data[addr];
 	}
 	pmach->_sp--;
@@ -228,13 +236,9 @@ static bool pop(Machine *pmach, Instruction instr)
 	if (instr.instr_generic._immediate) {
 		error(ERR_IMMEDIATE, pmach->_pc - 1);
 	}
-	if (pmach->_sp < 0 || pmach->_sp >= pmach->_datasize) {
-		error(ERR_SEGSTACK, pmach->_pc - 1);
-	}
+	test_error_datastack(pmach);
 	unsigned addr = address(pmach, instr);
-	if (addr >= pmach->_datasize) {
-		error(ERR_SEGDATA, pmach->_pc - 1);
-	}
+	test_error_dataseg(pmach, addr);
 	pmach->_data[addr] = pmach->_data[pmach->_sp];
 	return true;
 }
