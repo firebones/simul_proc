@@ -1,19 +1,19 @@
 #include "machine.h"
-#include "exec.h"//possible?
-#include "debug.h"//possible?
+#include "exec.h"
+#include "debug.h"
 #include <stdio.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <stdlib.h>
-//PROBLEME: print_program
+/*!
+ * \file machine.c
+ * \brief Description de la structure du processeur et de sa mémoire
+ */
 
+//! Méthode permettant d'afficher un message d'erreur et de quitter le programme .
 void die(const char *texte){
 	perror(texte);
 	exit(1);
 }
 
-//kékireste : vérifications, tests .
 void load_program(Machine *pmach,
                   unsigned textsize, Instruction text[textsize],
                   unsigned datasize, Word data[datasize],  unsigned dataend) 
@@ -23,9 +23,9 @@ void load_program(Machine *pmach,
 	pmach->_datasize = datasize;
 	pmach->_data = data;
 	pmach->_dataend = dataend;
-	pmach->_cc = 0; //initialisation à 0, cf page 8 du pdf
+	pmach->_cc = 0; //! initialisation à 0, cf page 8 du pdf
 	pmach->_pc = 0;
-	for(int i = 0 ; i < NREGISTERS-1 ; i++)//de R0 à R14 initialisés à 0 .
+	for(int i = 0 ; i < NREGISTERS-1 ; i++)//! de R0 à R14 initialisés à 0 .
 	{
 		pmach->_registers[i] = 0;
 	}
@@ -67,8 +67,6 @@ void read_program(Machine *pmach, const char *programfile)
 			die("./machine.c read_program : erreur à la fermeture du fichier");
 }
 
-
- 
 //oubli de paste dans un fichier dump.bin TODO
 void dump_memory(Machine *pmach)
 {

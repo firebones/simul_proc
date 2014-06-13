@@ -29,8 +29,7 @@ const char *condition_names[] ={
 };
 
 void print_instruction(Instruction instr, unsigned addr){
-    struct instr_generic generic = instr.instr_generic;
-    Code_Op cop = generic._cop;
+    Code_Op cop = instr.instr_generic._cop;
 
     if(cop > LAST_COP){
         error(ERR_UNKNOWN, addr);
@@ -41,19 +40,19 @@ void print_instruction(Instruction instr, unsigned addr){
         return;
     }
     else if(cop == BRANCH || cop == CALL){
-        if(generic._regcond > LAST_CONDITION){
+        if(instr.instr_generic._regcond > LAST_CONDITION){
             error(ERR_CONDITION, addr);
         }
-        printf("%s, ", condition_names[generic._regcond]);
+        printf("%s, ", condition_names[instr.instr_generic._regcond]);
     }
 
     else if(cop != PUSH && cop != POP){
-        printf("R%02u, ", generic._regcond);
+        printf("R%02u, ", instr.instr_generic._regcond);
     }
-    if(generic._immediate){
+    if(instr.instr_generic._immediate){
         printf("#%u", instr.instr_immediate._value);
     }
-    else if(generic._indexed){
+    else if(instr.instr_generic._indexed){
         printf("%d[R%02u]", instr.instr_indexed._offset, instr.instr_indexed._rindex);
     }
     else{
