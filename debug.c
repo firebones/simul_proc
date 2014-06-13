@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <string.h>
- #include <stdlib.h>
+#include <stdlib.h>
 #include "debug.h"
 
-
+/*!
+ * \file debug.c
+ * \brief Fonctions de mise au point interactive.
+ */
 void print_help()
 {
 	printf("Available commands:\n");
@@ -21,50 +24,49 @@ void print_help()
 bool debug_ask(Machine *pmach)
 {
 		printf("DEBUG? ");
-		char option = getchar();
+		char option = getchar();	//!<Lire le premier caractère
+		
 		if (option == 'h' && getchar() == '\n')
 		{
-			print_help();
+			print_help();			//!<Imprime l'aide du debug
 		} 
 		else if (option == 'c' && getchar() == '\n')
 		{
-			return false;
+			return false;			//!<Exite debug
 		} 
 		else if (option == 's' && getchar() == '\n')
 		{
-			return true;
+			return true;			//!<Exécute instruction suivant
 		} 
 		else if (option == 'r' && getchar() == '\n')
 		{
-			print_cpu(pmach);
+			print_cpu(pmach);		//!<Imprime l'information de cpu
 		} 
 		else if (option == 'd' && getchar() == '\n')
 		{
-			print_data(pmach);
+			print_data(pmach);		//!<Imprime l'information de cpu
 		} 
 		else if ((option == 't' || option == 'p') && getchar() == '\n')
 		{
-			print_program(pmach);
+			print_program(pmach);	//!<Imprime l'information de program
 		} 
 		else if (option == 'm' && getchar() == '\n')
 		{
-			print_cpu(pmach);
+			print_cpu(pmach);		//!<Imprime les information de cpu et de data
 			print_data(pmach);
 		} 
-		else if (option == 'R')
+		else if ((option == 'R') && (getchar() == 'E') && (getchar() == 'T') && (getchar() == '\n'))
 		{
-			if (getchar() == 'E' && getchar() == 'T' && getchar() == '\n')
-			{
-				return true;
-			}
+			return true;			//!<Exécute instruction suivant
 		} 
-		else if (option == '\n')
+		else if (option == '\n')	
 		{
-			return true;
+			return true;			//!<Exécute instruction suivant
 		} 
 		else
 		{
-			while(getchar() != '\n');
-		}		
-		return debug_ask(pmach);
+			while(getchar() != '\n');	//!<Ignore les restes caractères
+		}	
+
+		return debug_ask(pmach);	//!<Continue debug cette instruction
 }
