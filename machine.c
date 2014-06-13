@@ -10,7 +10,7 @@
  */
 
 //! Méthode permettant d'afficher un message d'erreur et de quitter le programme .
-void die(const char *texte){
+static void die(const char *texte){
 	perror(texte);
 	exit(1);
 }
@@ -194,8 +194,6 @@ void simul(Machine *pmach, bool debug)
 
 			error(ERR_SEGTEXT, pmach->_pc);
 		} 
-			
-
 		Instruction instruction = pmach->_text[pmach->_pc++];
 		trace("Executing",pmach,instruction,pmach->_pc-1);
 		run = decode_execute(pmach,instruction);
