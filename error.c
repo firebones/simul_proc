@@ -3,17 +3,10 @@
 
 void warning(Warning warn, unsigned addr)
 {
-<<<<<<< HEAD
 	fprintf(stdout,"WARNING: ");
 	if (warn == WARN_HALT)
 	{
 		fprintf(stdout,"HALT reached at address 0x%x\n",addr);
-=======
-	fprintf(stderr,"WARNING: ");
-	if (warn == WARN_HALT)
-	{
-		fprintf(stderr,"HALT reached at address 0x%x\n",addr);
->>>>>>> dc4be0f92b4824629413eff34ec95039394603dd
 	}
 }
 

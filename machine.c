@@ -42,12 +42,11 @@ void read_program(Machine *pmach, const char *programfile)
 		unsigned int textsize;
 		if(fread(&textsize,sizeof(unsigned int),1,fichier)!= 1)
 			die("./machine.c read_program : erreur à la lecture de textsize");
-		//2) _datasize
+
 		unsigned int datasize;
 		if(fread(&datasize,sizeof(unsigned int),1,fichier) != 1)
 			die("./machine.c read_program : erreur à la lecture de datasize");
 
-		//3) _dataend
 		unsigned int dataend;
 		if(fread(&dataend,sizeof(unsigned int),1,fichier) != 1)
 			die("./machine.c read_program : erreur à la lecture de dataend");
@@ -60,14 +59,13 @@ void read_program(Machine *pmach, const char *programfile)
 		if(fread(data,sizeof(Word),datasize,fichier) != datasize)
 			die("./machine.c read_program : erreur à la lecture des données");
 
-		//initialisation de la machine .
+		//! initialisation de la machine .
 		load_program(pmach,textsize,text,datasize,data,dataend);
 		
 		if(fclose(fichier)== -1)
 			die("./machine.c read_program : erreur à la fermeture du fichier");
 }
 
-//oubli de paste dans un fichier dump.bin TODO
 void dump_memory(Machine *pmach)
 {
 	FILE *dump;
@@ -93,7 +91,7 @@ void dump_memory(Machine *pmach)
 		die("./machine.c dump_memory : erreur à la fermeture du fichier binaire .");
 
 	printf("Instruction text[] = {\n");
-	//boucle pour récupérer les instructions
+
 	for(unsigned int i = 0; i < pmach->_textsize;i++)
 	{
 		Instruction *instruction = pmach->_text + i;
@@ -109,7 +107,6 @@ void dump_memory(Machine *pmach)
 	printf("unsigned textsize = %d;\n\n",pmach->_textsize);
 	printf("Word data[] = {\n");
 
-	//boucle pour récupérer les donnees
 	for(unsigned int i = 0; i <pmach->_datasize;i++)
 	{
 		Word *donnee = pmach->_data + i;
@@ -126,7 +123,6 @@ void dump_memory(Machine *pmach)
 	printf("unsigned dataend = %d;\n",pmach->_dataend);
 }
 
-//PROBLEME : l'adresse de l'instruction, c'est bien i ?
 void print_program(Machine *pmach)
 {
 		printf("*** PROGRAM (size: %d) ***\n",pmach->_textsize);
@@ -140,7 +136,6 @@ void print_program(Machine *pmach)
 		printf("\n");
 }
 
-//kékireste :tests
 void print_data(Machine *pmach)
 {
 printf("*** DATA (size: %d, end = Ox%08X (%d)) ***\n",pmach->_datasize,pmach->_dataend,pmach->_dataend);
@@ -155,7 +150,6 @@ printf("*** DATA (size: %d, end = Ox%08X (%d)) ***\n",pmach->_datasize,pmach->_d
 	printf("\n\n");
 }
 
-//kékireste : tests
 void print_cpu(Machine *pmach)
 {	
 	char type_cc;
