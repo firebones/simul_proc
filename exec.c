@@ -10,7 +10,7 @@
  * \param instr l'instruction à exécuter
  * \return l'adresse absolu en mode absolu, l'adresse indexée sinon
  */
-unsigned address(Machine *pmach, Instruction instr) 
+static unsigned address(Machine *pmach, Instruction instr) 
 {
 	if (instr.instr_generic._immediate) {
 		return instr.instr_immediate._value;
@@ -29,7 +29,7 @@ unsigned address(Machine *pmach, Instruction instr)
  * \param instr l'instruction à exécuter
  * \return vrai s'il doit faire un jump, faux s'il ne doit pas et rien s'il y a une erreur
  */
-bool jump_or_not(Machine *pmach, Instruction instr)
+static bool jump_or_not(Machine *pmach, Instruction instr)
 {
 	if (instr.instr_generic._regcond > LAST_CONDITION) {
 		error(ERR_CONDITION, pmach->_pc - 1);
@@ -62,7 +62,7 @@ bool jump_or_not(Machine *pmach, Instruction instr)
  * \param instr l'instruction à exécuter
  * \return ne retourne rien car part en erreur
  */
-bool illop(Machine *pmach, Instruction instr)
+static bool illop(Machine *pmach, Instruction instr)
 {
 	error(ERR_ILLEGAL, pmach->_pc - 1);
 }
@@ -73,7 +73,7 @@ bool illop(Machine *pmach, Instruction instr)
  * \param instr l'instruction à exécuter
  * \return vrai
  */
-bool nop(Machine *pmach, Instruction instr)
+static bool nop(Machine *pmach, Instruction instr)
 {
 	return true;
 }
@@ -84,7 +84,7 @@ bool nop(Machine *pmach, Instruction instr)
  * \param instr l'instruction à exécuter
  * \return vrai s'il n'y a pas d'erreur
  */
-bool load(Machine *pmach, Instruction instr)
+static bool load(Machine *pmach, Instruction instr)
 {
 	unsigned rc = instr.instr_generic._regcond;
 
@@ -120,7 +120,7 @@ bool load(Machine *pmach, Instruction instr)
  * \param instr l'instruction à exécuter
  * \return brai s'il n'y a pas d'erreur
  */
-bool store(Machine *pmach, Instruction instr)
+static bool store(Machine *pmach, Instruction instr)
 {
 	if (instr.instr_generic._immediate) {
 		error(ERR_IMMEDIATE, pmach->_pc - 1);
@@ -143,7 +143,7 @@ bool store(Machine *pmach, Instruction instr)
  * \param instr l'instruction à exécuter
  * \return vrai s'il n'y a pas d'erreur
  */
-bool add(Machine *pmach, Instruction instr)
+static bool add(Machine *pmach, Instruction instr)
 {
 	unsigned rc = instr.instr_generic._regcond;
 
@@ -179,7 +179,7 @@ bool add(Machine *pmach, Instruction instr)
  * \param instr l'instruction à exécuter
  * \return vrai s'il n'y a pas d'erreur
  */
-bool sub(Machine *pmach, Instruction instr)
+static bool sub(Machine *pmach, Instruction instr)
 {
 	unsigned rc = instr.instr_generic._regcond;
 
@@ -215,7 +215,7 @@ bool sub(Machine *pmach, Instruction instr)
  * \param instr l'instruction à exécuter
  * \return vrai s'il n'y a pas d'erreur
  */
-bool branch(Machine *pmach, Instruction instr)
+static bool branch(Machine *pmach, Instruction instr)
 {
 	if (instr.instr_generic._immediate) {
 		error(ERR_IMMEDIATE, pmach->_pc - 1);
@@ -234,7 +234,7 @@ bool branch(Machine *pmach, Instruction instr)
  * \param instr l'instruction à exécuter
  * \return vrai s'il n'y a pas d'erreur
  */
-bool call(Machine *pmach, Instruction instr)
+static bool call(Machine *pmach, Instruction instr)
 {
 	if (instr.instr_generic._immediate) {
 		error(ERR_IMMEDIATE, pmach->_pc - 1);
@@ -259,7 +259,7 @@ bool call(Machine *pmach, Instruction instr)
  * \param instr l'instruction à exécuter
  * \return vrai s'il n'y a pas d'erreur
  */
-bool ret(Machine *pmach, Instruction instr)
+static bool ret(Machine *pmach, Instruction instr)
 {
 	pmach->_sp++;
 	if (pmach->_sp < 0 || pmach->_sp >= pmach->_datasize) {
@@ -277,7 +277,7 @@ bool ret(Machine *pmach, Instruction instr)
  * \param instr l'instruction à exécuter
  * \return vrai s'il n'y a pas d'erreur
  */
-bool push(Machine *pmach, Instruction instr)
+static bool push(Machine *pmach, Instruction instr)
 {
 	if (pmach->_sp < 0 || pmach->_sp >= pmach->_datasize) {
 		error(ERR_SEGSTACK, pmach->_pc - 1);
@@ -305,7 +305,7 @@ bool push(Machine *pmach, Instruction instr)
  * \param instr l'instruction à exécuter
  * \return vrai s'il n'y a pas d'erreur
  */
-bool pop(Machine *pmach, Instruction instr)
+static bool pop(Machine *pmach, Instruction instr)
 {
 	pmach->_sp++;
 	if (instr.instr_generic._immediate) {
@@ -332,7 +332,7 @@ bool pop(Machine *pmach, Instruction instr)
  * \param instr l'instruction à exécuter
  * \return faux
  */
-bool halt(Machine *pmach, Instruction instr)
+static bool halt(Machine *pmach, Instruction instr)
 {
 	warning(WARN_HALT, pmach->_pc - 1);
 	return false;
